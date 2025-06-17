@@ -19,3 +19,5 @@ func (u *User) GetUserByLogin(ctx context.Context, login string) (*model.User, e
 	return nil, nil
 }
 func (u *User) GetUserByID(ctx context.Context, userID int) (*model.User, error) { return nil, nil }
+
+func (u *User) GetDB() *sqlx.DB { return u.db }

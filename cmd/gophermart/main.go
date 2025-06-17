@@ -1,58 +1,48 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"errors"
 	"github.com/stlesnik/loyalty-system-project/internal/app"
-	"github.com/stlesnik/loyalty-system-project/internal/config"
-	"github.com/stlesnik/loyalty-system-project/internal/handler"
-	"github.com/stlesnik/loyalty-system-project/internal/repository/postgres"
-	"github.com/stlesnik/loyalty-system-project/internal/service"
-	"github.com/stlesnik/loyalty-system-project/internal/utils"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 func main() {
-	// config
-	cfg, err := config.New()
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+
+	a, err := app.New()
 	if err != nil {
-		log.Fatalf("Не получилось обработать конфиг: %s", err)
-		return
+		panic(err)
 	}
 
-	//logger
-	err = utils.InitLogger(cfg.Environment)
-	if err != nil {
-		panic(fmt.Errorf("logger broke: %w", err))
+	serverErr := make(chan error, 1)
+	go func() {
+		log.Printf("Сервер запущен на %s", a.Cfg.ServerAddress)
+		if err := a.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			serverErr <- err
+		}
+		close(serverErr)
+	}()
+
+	select {
+	case err := <-serverErr:
+		log.Fatalf("Сервер неожиданно завершил работу: %v", err)
+	case sig := <-stop:
+		log.Printf("Получен сигнал %s, завершаем работу...", sig)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		if err := a.Stop(ctx); err != nil {
+			log.Fatalf("Ошибка при остановке приложения: %v", err)
+		}
+		log.Println("Сервер успешно остановлен")
 	}
 
-	//repository
-	reps, err := postgres.InitRepositories(cfg.DatabaseDSN)
-	if err != nil {
-		panic(fmt.Errorf("db could not start: %w", err))
-	}
-
-	//services
-	authSvc := service.NewAuthService(reps.User)
-	orderSvc := service.NewOrderService(reps.Order)
-	balanceSvc := service.NewBalanceService(reps.Balance, reps.Withdraw)
-
-	// handlers
-	authHandler := handler.NewAuthHandler(authSvc)
-	orderHandler := handler.NewOrderHandler(orderSvc)
-	balanceHandler := handler.NewBalanceHandler(balanceSvc)
-
-	// app
-	a := app.New(
-		authHandler,
-		orderHandler,
-		balanceHandler,
-		cfg,
-	)
-
-	log.Printf("Сервер запущен на %s", cfg.ServerAddress)
-	err = a.Start()
-	if err != nil {
-		log.Fatalf("Не получилось запустить приложение: %s", err)
-		return
-	}
 }

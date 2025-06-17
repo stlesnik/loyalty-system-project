@@ -8,7 +8,7 @@ import (
 
 func (a *App) initRouter(authH *handler.AuthHandler, ordH *handler.OrderHandler, balH *handler.BalanceHandler) {
 	wrap := func(h http.HandlerFunc) http.HandlerFunc {
-		return middleware.WithAuth(a.cfg,
+		return middleware.WithAuth(a.Cfg,
 			middleware.WithLogging(
 				middleware.WithDecompress(
 					middleware.WithCompress(h),

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/stlesnik/loyalty-system-project/internal/utils"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type Repositories struct {

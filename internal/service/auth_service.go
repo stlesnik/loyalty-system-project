@@ -1,11 +1,9 @@
 package service
 
-import "github.com/stlesnik/loyalty-system-project/internal/repository"
-
 type AuthService struct {
-	rep repository.UserRepository
+	rep UserRepository
 }
 
-func NewAuthService(rep repository.UserRepository) *AuthService {
+func NewAuthService(rep UserRepository) *AuthService {
 	return &AuthService{rep: rep}
 }

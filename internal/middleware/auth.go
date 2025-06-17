@@ -16,7 +16,6 @@ import (
 type contextKey string
 
 const (
-	TokenExp                 = time.Hour * 24
 	UserIDKeyName contextKey = "userID"
 )
 
@@ -32,7 +31,7 @@ func WithAuth(cfg *config.Config, next http.HandlerFunc) http.HandlerFunc {
 			utils.Log.Infow("error getting auth token", "err", err)
 			newUserID := uuid.New().String()
 			utils.Log.Infow("No user id in cookie. Created new", "userID", newUserID)
-			cookie, err := createSignedCookie(newUserID, cfg.AuthSecretKey)
+			cookie, err := createSignedCookie(cfg.AuthTokenExp, newUserID, cfg.AuthSecretKey)
 			if err != nil {
 				http.Error(w, "Internal error", http.StatusInternalServerError)
 				return
@@ -50,10 +49,10 @@ type Claims struct {
 	UserID string
 }
 
-func createSignedCookie(userID string, secretKey string) (*http.Cookie, error) {
+func createSignedCookie(tokenExp time.Duration, userID string, secretKey string) (*http.Cookie, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(TokenExp)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(tokenExp)),
 		},
 		UserID: userID,
 	})
@@ -66,7 +65,7 @@ func createSignedCookie(userID string, secretKey string) (*http.Cookie, error) {
 	return &http.Cookie{
 		Name:     "auth_token",
 		Value:    tokenString,
-		Expires:  time.Now().Add(TokenExp),
+		Expires:  time.Now().Add(tokenExp),
 		HttpOnly: true,
 		Path:     "/",
 	}, nil
@@ -80,11 +79,9 @@ func getUserIDFromCookie(r *http.Request, secretKey string) (string, error) {
 
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(cookie.Value, claims, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
 		return []byte(secretKey), nil
-	})
+	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}),
+	)
 	if err != nil {
 		return "", err
 	}

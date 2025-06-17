@@ -1,11 +1,9 @@
 package service
 
-import "github.com/stlesnik/loyalty-system-project/internal/repository"
-
 type OrderService struct {
-	rep repository.OrderRepository
+	rep OrderRepository
 }
 
-func NewOrderService(rep repository.OrderRepository) *OrderService {
+func NewOrderService(rep OrderRepository) *OrderService {
 	return &OrderService{rep: rep}
 }
