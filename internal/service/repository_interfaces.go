@@ -6,13 +6,13 @@ import (
 )
 
 type UserRepository interface {
-	CreateUser(ctx context.Context, login string, password string) error
+	CreateUser(ctx context.Context, login, password string) (*model.User, error)
 	GetUserByLogin(ctx context.Context, login string) (*model.User, error)
 	GetUserByID(ctx context.Context, userID int) (*model.User, error)
 }
 
 type OrderRepository interface {
-	CreateOrder(ctx context.Context, userID int, orderID string) error
+	CreateOrder(ctx context.Context, userID int, orderID string) (*model.Order, error)
 	GetOrdersByUserID(ctx context.Context, userID int) ([]model.Order, error)
 	GetOrderByID(ctx context.Context, orderID string) (*model.Order, error)
 	UpdateOrder(ctx context.Context, order model.Order) error
@@ -24,6 +24,6 @@ type BalanceRepository interface {
 }
 
 type WithdrawalRepository interface {
-	CreateWithdrawal(ctx context.Context, userID int, orderID string, sum int) error
+	CreateWithdrawal(ctx context.Context, userID int, orderID string, sum int) (*model.Withdrawal, error)
 	GetWithdrawalsByUserID(ctx context.Context, userID int) ([]model.Withdrawal, error)
 }

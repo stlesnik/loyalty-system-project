@@ -4,13 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/stlesnik/loyalty-system-project/internal/config"
 	"github.com/stlesnik/loyalty-system-project/internal/utils"
 	"net/http"
-	"time"
-
-	"github.com/golang-jwt/jwt/v4"
-	"github.com/google/uuid"
 )
 
 type contextKey string
@@ -19,62 +16,31 @@ const (
 	UserIDKeyName contextKey = "userID"
 )
 
-func WithAuth(cfg *config.Config, next http.HandlerFunc) http.HandlerFunc {
+func RequireAuth(cfg *config.Config, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, err := getUserIDFromCookie(r, cfg.AuthSecretKey)
 
-		if err == nil {
-			utils.Log.Infow("Got user id from cookie", "userID", userID)
-			ctx := context.WithValue(r.Context(), UserIDKeyName, userID)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		} else {
-			utils.Log.Infow("error getting auth token", "err", err)
-			newUserID := uuid.New().String()
-			utils.Log.Infow("No user id in cookie. Created new", "userID", newUserID)
-			cookie, err := createSignedCookie(cfg.AuthTokenExp, newUserID, cfg.AuthSecretKey)
-			if err != nil {
-				http.Error(w, "Internal error", http.StatusInternalServerError)
-				return
-			}
-
-			http.SetCookie(w, cookie)
-			ctx := context.WithValue(r.Context(), UserIDKeyName, newUserID)
-			next.ServeHTTP(w, r.WithContext(ctx))
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
 		}
+
+		utils.Log.Infow("Got user id from cookie", "userID", userID)
+		ctx := context.WithValue(r.Context(), UserIDKeyName, userID)
+		next.ServeHTTP(w, r.WithContext(ctx))
+
 	}
 }
 
 type Claims struct {
 	jwt.RegisteredClaims
-	UserID string
+	UserID int
 }
 
-func createSignedCookie(tokenExp time.Duration, userID string, secretKey string) (*http.Cookie, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(tokenExp)),
-		},
-		UserID: userID,
-	})
-
-	tokenString, err := token.SignedString([]byte(secretKey))
-	if err != nil {
-		return nil, err
-	}
-
-	return &http.Cookie{
-		Name:     "auth_token",
-		Value:    tokenString,
-		Expires:  time.Now().Add(tokenExp),
-		HttpOnly: true,
-		Path:     "/",
-	}, nil
-}
-
-func getUserIDFromCookie(r *http.Request, secretKey string) (string, error) {
+func getUserIDFromCookie(r *http.Request, secretKey string) (int, error) {
 	cookie, err := r.Cookie("auth_token")
 	if err != nil {
-		return "", fmt.Errorf("failed to get Authorization cookie")
+		return -1, fmt.Errorf("failed to get Authorization cookie")
 	}
 
 	claims := &Claims{}
@@ -83,10 +49,10 @@ func getUserIDFromCookie(r *http.Request, secretKey string) (string, error) {
 	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}),
 	)
 	if err != nil {
-		return "", err
+		return -1, err
 	}
 	if !token.Valid {
-		return "", errors.New("invalid token")
+		return -1, errors.New("invalid token")
 	}
 
 	return claims.UserID, nil

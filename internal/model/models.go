@@ -1,14 +1,9 @@
 package model
 
-import (
-	"time"
-)
-
 type User struct {
-	ID           int       `json:"id"`
-	Login        string    `json:"login"`
-	PasswordHash string    `json:"password"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID           int    `json:"id" db:"id"`
+	Login        string `json:"login" db:"login"`
+	PasswordHash string `json:"password" db:"password"`
 }
 type Status int
 
@@ -20,11 +15,10 @@ const (
 )
 
 type Order struct {
-	ID          int       `json:"id"`
-	UserID      int       `json:"user_id"`
-	Status      Status    `json:"status"`
-	BonusAmount int       `json:"bonus_amount"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID          int    `json:"id"`
+	UserID      int    `json:"user_id"`
+	Status      Status `json:"status"`
+	BonusAmount int    `json:"bonus_amount"`
 }
 type Balance struct {
 	UserID  int    `json:"user_id"`
@@ -32,9 +26,8 @@ type Balance struct {
 }
 
 type Withdrawal struct {
-	ID          int       `json:"id"`
-	UserID      int       `json:"user_id"`
-	OrderID     string    `json:"order_id"`
-	Amount      int       `json:"amount"`
-	ProcessedAt time.Time `json:"processed_at"`
+	ID      int    `json:"id"`
+	UserID  int    `json:"user_id"`
+	OrderID string `json:"order_id"`
+	Amount  int    `json:"amount"`
 }

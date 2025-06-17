@@ -46,9 +46,9 @@ func New() (*App, error) {
 	balanceSvc := service.NewBalanceService(reps.Balance, reps.Withdraw)
 
 	// handlers
-	authHandler := handler.NewAuthHandler(authSvc)
-	orderHandler := handler.NewOrderHandler(orderSvc)
-	balanceHandler := handler.NewBalanceHandler(balanceSvc)
+	authHandler := handler.NewAuthHandler(authSvc, cfg)
+	orderHandler := handler.NewOrderHandler(orderSvc, cfg)
+	balanceHandler := handler.NewBalanceHandler(balanceSvc, cfg)
 
 	a := &App{
 		router: chi.NewRouter(),
