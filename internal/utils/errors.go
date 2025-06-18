@@ -18,4 +18,5 @@ var (
 	//order
 	ErrOrderAlreadyUploaded = errors.New("order already uploaded")
 	ErrOrderConflict        = errors.New("order uploaded by another user")
+	ErrNoOrders             = errors.New("no orders found")
 )

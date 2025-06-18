@@ -17,11 +17,11 @@ const (
 )
 
 type Order struct {
-	ID          int       `json:"id"`
-	UserID      int       `json:"user_id"`
-	Status      Status    `json:"status"`
-	BonusAmount int       `json:"bonus_amount"`
-	CreatedAt   time.Time `json:"created_at"`
+	Number     string    `json:"number"`
+	UserID     int       `json:"-"`
+	Status     Status    `json:"status"`
+	Accrual    int       `json:"accrual,omitempty"`
+	UploadedAt time.Time `json:"uploaded_at"`
 }
 type Balance struct {
 	UserID  int    `json:"user_id"`

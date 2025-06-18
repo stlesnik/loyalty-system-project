@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/stlesnik/loyalty-system-project/internal/config"
 	"github.com/stlesnik/loyalty-system-project/internal/middleware"
@@ -26,8 +27,6 @@ func (oH *OrderHandler) UploadOrder(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
-
 	orderNumber := strings.TrimSpace(string(body))
 
 	if !utils.ValidLuhn(orderNumber) {
@@ -48,4 +47,23 @@ func (oH *OrderHandler) UploadOrder(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
 	}
 }
-func (oH *OrderHandler) GetOrders(w http.ResponseWriter, r *http.Request) {}
+func (oH *OrderHandler) GetOrders(w http.ResponseWriter, r *http.Request) {
+	userID, _ := r.Context().Value(middleware.UserIDKeyName).(int)
+	orders, err := oH.s.GetUserOrders(r.Context(), userID)
+	switch {
+	case errors.Is(err, utils.ErrNoOrders):
+		w.WriteHeader(http.StatusNoContent)
+		return
+	case err != nil:
+		http.Error(w, "Server error", http.StatusInternalServerError)
+		return
+	default:
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		err = json.NewEncoder(w).Encode(orders)
+		if err != nil {
+			utils.Log.Errorf("json encode error: %s", err.Error())
+			http.Error(w, "Server error", http.StatusInternalServerError)
+		}
+	}
+}

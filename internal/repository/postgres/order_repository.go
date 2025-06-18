@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
 	"github.com/stlesnik/loyalty-system-project/internal/model"
@@ -20,14 +21,13 @@ func NewOrder(db *sqlx.DB) *Order {
 }
 
 func (o *Order) Create(ctx context.Context, userID int, orderID string) (*model.Order, error) {
-	var id int
-	createdAt := time.Now().UTC()
+	uploadedAt := time.Now().UTC()
 
-	err := o.db.QueryRowContext(
+	_, err := o.db.ExecContext(
 		ctx,
-		"INSERT INTO orders(user_id, order_id, created_at) VALUES($1, $2, $3) RETURNING id",
-		userID, orderID, createdAt,
-	).Scan(&id)
+		"INSERT INTO orders(user_id, order_id, created_at) VALUES($1, $2, $3)",
+		userID, orderID, uploadedAt,
+	)
 
 	if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == ErrCodeUniqueViolation {
 		utils.Log.Infow("Order already exists", "order_id", orderID)
@@ -38,18 +38,28 @@ func (o *Order) Create(ctx context.Context, userID int, orderID string) (*model.
 		return nil, err
 	}
 
-	utils.Log.Infow("Order created", "order_id", orderID, "id", id)
+	utils.Log.Infow("Order uploaded", "order_id", orderID)
 	return &model.Order{
-		ID:          id,
-		UserID:      userID,
-		Status:      model.NEW,
-		BonusAmount: 0,
-		CreatedAt:   createdAt,
+		Number:     orderID,
+		UserID:     userID,
+		Status:     model.NEW,
+		UploadedAt: uploadedAt,
 	}, nil
 }
 
 func (o *Order) GetByUserID(ctx context.Context, userID int) ([]model.Order, error) {
-	return nil, nil
+	var orders []model.Order
+	err := o.db.SelectContext(ctx, &orders, `
+        SELECT *
+        FROM orders 
+        WHERE user_id = $1
+        ORDER BY created_at DESC  
+    `, userID)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get orders: %w", err)
+	}
+	return orders, nil
 }
 
 func (o *Order) GetByID(ctx context.Context, orderID string) (*model.Order, error) {
