@@ -4,14 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 	"github.com/stlesnik/loyalty-system-project/internal/model"
 	"github.com/stlesnik/loyalty-system-project/internal/utils"
 )
 
 const (
-	ErrCodeUniqueViolation = "23505" // unique_violation
+	ErrCodeUniqueViolation = "23505"
 )
 
 type User struct {
@@ -21,9 +21,16 @@ type User struct {
 func NewUser(db *sqlx.DB) *User {
 	return &User{db: db}
 }
+
 func (u *User) CreateUser(ctx context.Context, login, password string) (*model.User, error) {
-	res, err := u.db.ExecContext(ctx, "INSERT INTO users(login, password) VALUES($1, $2)", login, password)
-	if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == ErrCodeUniqueViolation {
+	var id int
+	err := u.db.QueryRowContext(
+		ctx,
+		"INSERT INTO users(login, password) VALUES($1, $2) RETURNING id",
+		login, password,
+	).Scan(&id)
+
+	if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == ErrCodeUniqueViolation {
 		utils.Log.Infow("User already exists", "login", login)
 		return nil, utils.ErrLoginAlreadyExists
 	}
@@ -31,18 +38,14 @@ func (u *User) CreateUser(ctx context.Context, login, password string) (*model.U
 		utils.Log.Infow("User creation failed", "login", login, "error", err)
 		return nil, err
 	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		utils.Log.Infow("Last insert id", "login", login, "error", err)
-		return nil, err
-	}
+
 	utils.Log.Infow("User created", "login", login, "id", id)
-	return &model.User{ID: int(id), Login: login, PasswordHash: password}, nil
+	return &model.User{ID: id, Login: login, PasswordHash: password}, nil
 }
 
 func (u *User) GetUserByLogin(ctx context.Context, login string) (*model.User, error) {
-	var user *model.User
-	err := u.db.GetContext(ctx, &user, "SELECT * FROM user WHERE login = $1", login)
+	var user model.User
+	err := u.db.GetContext(ctx, &user, "SELECT * FROM users WHERE login = $1", login)
 	if errors.Is(err, sql.ErrNoRows) {
 		utils.Log.Infow("User not found", "login", login)
 		return nil, utils.ErrLoginDoesntExist
@@ -52,12 +55,12 @@ func (u *User) GetUserByLogin(ctx context.Context, login string) (*model.User, e
 		return nil, err
 	}
 	utils.Log.Infow("User found", "login", login)
-	return user, nil
+	return &user, nil
 }
 
 func (u *User) GetUserByID(ctx context.Context, userID int) (*model.User, error) {
 	var user *model.User
-	err := u.db.GetContext(ctx, &user, "SELECT * FROM user WHERE id = $1", userID)
+	err := u.db.GetContext(ctx, &user, "SELECT * FROM users WHERE id = $1", userID)
 	if errors.Is(err, sql.ErrNoRows) {
 		utils.Log.Infow("User not found", "id", userID)
 		return nil, utils.ErrIDDoesntExist

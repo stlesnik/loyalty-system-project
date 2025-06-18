@@ -3,6 +3,7 @@ package postgres
 import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	migrator "github.com/stlesnik/loyalty-system-project/internal/repository"
 	"github.com/stlesnik/loyalty-system-project/internal/utils"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -24,6 +25,9 @@ func newDataBase(dsn string) (*sqlx.DB, error) {
 	return db, nil
 }
 func InitRepositories(dsn string) (Repositories, error) {
+
+	migrator.Run(dsn)
+
 	db, err := newDataBase(dsn)
 	if err != nil {
 		return Repositories{}, err

@@ -32,11 +32,6 @@ func (s AuthService) RegisterUser(ctx context.Context, login, password string) (
 }
 
 func (s AuthService) Authenticate(ctx context.Context, login string, password string) (int, error) {
-	hashedPass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		utils.Log.Infow("Failed to hash password", "error", err)
-		return -1, err
-	}
 	user, err := s.rep.GetUserByLogin(ctx, login)
 	switch {
 	case errors.Is(err, utils.ErrLoginDoesntExist):
@@ -44,7 +39,7 @@ func (s AuthService) Authenticate(ctx context.Context, login string, password st
 	case err != nil:
 		return -1, err
 	default:
-		if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), hashedPass); err != nil {
+		if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 			utils.Log.Infow("Failed to compare password", "error", err)
 			return -1, utils.ErrInvalidCredentials
 		}
