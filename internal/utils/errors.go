@@ -6,8 +6,6 @@ import (
 
 var (
 	ErrOpenDB        = errors.New("error while opening db")
-	ErrWarmDB        = errors.New("error while warming db up")
-	ErrPingDB        = errors.New("error while ping to db")
 	ErrIDDoesntExist = errors.New("id does not exist")
 
 	//auth
@@ -22,4 +20,7 @@ var (
 
 	//balance
 	ErrInsufficientFunds = errors.New("insufficient funds")
+
+	//accruel
+	ErrOrderNotFoundInAccrual = errors.New("order not found")
 )

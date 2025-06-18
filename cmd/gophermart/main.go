@@ -24,7 +24,11 @@ func main() {
 	serverErr := make(chan error, 1)
 	go func() {
 		log.Printf("Сервер запущен на %s", a.Cfg.ServerAddress)
-		if err := a.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		if err := a.Start(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			serverErr <- err
 		}
 		close(serverErr)

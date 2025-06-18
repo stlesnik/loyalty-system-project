@@ -15,7 +15,7 @@ type OrderRepository interface {
 	Create(ctx context.Context, userID int, orderNumber string) (*model.Order, error)
 	GetByUserID(ctx context.Context, userID int) ([]model.Order, error)
 	GetByID(ctx context.Context, orderNumber string) (*model.Order, error)
-	Update(ctx context.Context, order model.Order) error
+	Update(ctx context.Context, orderNumber string, status string, accrual *float64) error
 }
 
 type BalanceRepository interface {

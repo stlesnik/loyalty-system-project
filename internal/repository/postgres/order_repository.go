@@ -81,4 +81,34 @@ func (o *Order) GetByID(ctx context.Context, orderNumber string) (*model.Order, 
 	return &order, nil
 }
 
-func (o *Order) Update(ctx context.Context, order model.Order) error { return nil }
+func (o *Order) Update(ctx context.Context, orderNumber string, status string, accrual *float64) error {
+	var dbAccrual sql.NullFloat64
+
+	if accrual != nil {
+		dbAccrual = sql.NullFloat64{
+			Float64: *accrual,
+			Valid:   true,
+		}
+	} else {
+		dbAccrual = sql.NullFloat64{Valid: false}
+	}
+
+	var updatedNumber string
+	err := o.db.GetContext(ctx, &updatedNumber, `
+        UPDATE orders 
+        SET 
+            status = $1,
+            accrual = $2
+        WHERE number = $3
+        RETURNING number
+    `, status, dbAccrual, orderNumber)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return utils.ErrNoOrders
+		}
+		return fmt.Errorf("update failed: %w", err)
+	}
+
+	return nil
+}

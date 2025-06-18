@@ -47,6 +47,7 @@ func (oH *OrderHandler) UploadOrder(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
 	}
 }
+
 func (oH *OrderHandler) GetOrders(w http.ResponseWriter, r *http.Request) {
 	userID, _ := r.Context().Value(middleware.UserIDKeyName).(int)
 	orders, err := oH.s.GetUserOrders(r.Context(), userID)

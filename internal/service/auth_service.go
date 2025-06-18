@@ -18,7 +18,7 @@ func NewAuthService(rep UserRepository) *AuthService {
 	return &AuthService{rep: rep}
 }
 
-func (s AuthService) RegisterUser(ctx context.Context, login, password string) (int, error) {
+func (s *AuthService) RegisterUser(ctx context.Context, login, password string) (int, error) {
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		utils.Log.Infow("Failed to hash password", "error", err)
@@ -31,7 +31,7 @@ func (s AuthService) RegisterUser(ctx context.Context, login, password string) (
 	return user.ID, nil
 }
 
-func (s AuthService) Authenticate(ctx context.Context, login string, password string) (int, error) {
+func (s *AuthService) Authenticate(ctx context.Context, login string, password string) (int, error) {
 	user, err := s.rep.GetByLogin(ctx, login)
 	switch {
 	case errors.Is(err, utils.ErrLoginDoesntExist):
@@ -53,7 +53,7 @@ type Claims struct {
 	UserID int
 }
 
-func (s AuthService) GenerateUserToken(id int, secretKey string, tokenExp time.Duration) (string, error) {
+func (s *AuthService) GenerateUserToken(id int, secretKey string, tokenExp time.Duration) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(tokenExp)),
