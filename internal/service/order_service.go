@@ -19,8 +19,10 @@ func (s OrderService) UploadOrder(ctx context.Context, userID int, orderNumber s
 
 	if err == nil {
 		if existing.UserID == userID {
+			utils.Log.Infow("Order already exists for this user", "order_number", orderNumber, "db_user_id", existing.UserID, "req_user_id", userID)
 			return utils.ErrOrderAlreadyUploaded
 		}
+		utils.Log.Infow("Order already exists for different user", "order_number", orderNumber, "db_user_id", existing.UserID, "req_user_id", userID)
 		return utils.ErrOrderConflict
 	}
 

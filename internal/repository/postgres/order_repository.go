@@ -25,20 +25,20 @@ func (o *Order) Create(ctx context.Context, userID int, orderID string) (*model.
 
 	_, err := o.db.ExecContext(
 		ctx,
-		"INSERT INTO orders(user_id, order_id, created_at) VALUES($1, $2, $3)",
+		"INSERT INTO orders(user_id, number, uploaded_at) VALUES($1, $2, $3)",
 		userID, orderID, uploadedAt,
 	)
 
 	if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == ErrCodeUniqueViolation {
-		utils.Log.Infow("Order already exists", "order_id", orderID)
+		utils.Log.Infow("Order already exists", "number", orderID)
 		return nil, utils.ErrLoginAlreadyExists
 	}
 	if err != nil {
-		utils.Log.Infow("Order creation failed", "order_id", orderID, "error", err)
+		utils.Log.Infow("Order creation failed", "number", orderID, "error", err)
 		return nil, err
 	}
 
-	utils.Log.Infow("Order uploaded", "order_id", orderID)
+	utils.Log.Infow("Order uploaded", "number", orderID)
 	return &model.Order{
 		Number:     orderID,
 		UserID:     userID,
@@ -63,18 +63,18 @@ func (o *Order) GetByUserID(ctx context.Context, userID int) ([]model.Order, err
 }
 
 func (o *Order) GetByID(ctx context.Context, orderID string) (*model.Order, error) {
-	var order *model.Order
-	err := o.db.GetContext(ctx, &order, "SELECT * FROM orders WHERE order_id = $1", orderID)
+	var order model.Order
+	err := o.db.GetContext(ctx, &order, "SELECT * FROM orders WHERE number = $1", orderID)
 	if errors.Is(err, sql.ErrNoRows) {
 		utils.Log.Infow("Order not found", "id", orderID)
 		return nil, utils.ErrIDDoesntExist
 	}
 	if err != nil {
-		utils.Log.Infow("Order get by id query failed", "id", orderID)
+		utils.Log.Errorw("Order get by id query failed", "error", err, "id", orderID)
 		return nil, err
 	}
 	utils.Log.Infow("Order found", "id", orderID)
-	return order, nil
+	return &order, nil
 }
 
 func (o *Order) Update(ctx context.Context, order model.Order) error { return nil }
