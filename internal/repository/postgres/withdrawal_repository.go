@@ -2,8 +2,11 @@ package postgres
 
 import (
 	"context"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
 	"github.com/stlesnik/loyalty-system-project/internal/model"
+	"github.com/stlesnik/loyalty-system-project/internal/utils"
+	"time"
 )
 
 type Withdrawal struct {
@@ -13,9 +16,35 @@ type Withdrawal struct {
 func NewWithdrawal(db *sqlx.DB) *Withdrawal {
 	return &Withdrawal{db: db}
 }
-func (w *Withdrawal) Create(ctx context.Context, userID int, orderID string, sum int) (*model.Withdrawal, error) {
-	return nil, nil
+
+func (w *Withdrawal) Create(ctx context.Context, userID int, orderNumber string, amount float64) (*model.Withdrawal, error) {
+	processedAt := time.Now().UTC()
+	_, err := w.db.ExecContext(ctx, `
+        INSERT INTO withdrawals (user_id, order_number, sum, processed_at)
+        VALUES ($1, $2, $3, $4)
+    `, userID, orderNumber, amount, processedAt)
+
+	if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == ErrCodeUniqueViolation {
+		return nil, utils.ErrOrderAlreadyUploaded
+	}
+	if err != nil {
+		utils.Log.Errorf("Error creating withdrawal: %s", err.Error())
+		return nil, err
+	}
+	return &model.Withdrawal{
+		UserID:      userID,
+		OrderID:     orderNumber,
+		Amount:      amount,
+		ProcessedAt: processedAt,
+	}, nil
 }
-func (w *Withdrawal) GetByUserID(ctx context.Context, userID int) ([]model.Withdrawal, error) {
-	return nil, nil
+
+func (w *Withdrawal) GetTotal(ctx context.Context, userID int) (float64, error) {
+	var withdrawn float64
+	err := w.db.GetContext(ctx, &withdrawn, `
+        SELECT COALESCE(SUM(amount), 0) 
+        FROM withdrawals 
+        WHERE user_id = $1
+    `, userID)
+	return withdrawn, err
 }

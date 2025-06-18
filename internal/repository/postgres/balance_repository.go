@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"github.com/jmoiron/sqlx"
-	"github.com/stlesnik/loyalty-system-project/internal/model"
 )
 
 type Balance struct {
@@ -13,9 +12,17 @@ type Balance struct {
 func NewBalance(db *sqlx.DB) *Balance {
 	return &Balance{db: db}
 }
-func (b *Balance) Get(ctx context.Context, userID int) (*model.Balance, error) {
-	return nil, nil
+
+func (b *Balance) GetTotal(ctx context.Context, userID int) (float64, error) {
+	var current float64
+	err := b.db.GetContext(ctx, &current, `
+        SELECT COALESCE(SUM(accrual), 0) 
+        FROM orders 
+        WHERE user_id = $1 AND status = 'PROCESSED'
+    `, userID)
+	return current, err
 }
+
 func (b *Balance) Update(ctx context.Context, userID int, deltaCurrent int, deltaWithdrawn int) error {
 	return nil
 }

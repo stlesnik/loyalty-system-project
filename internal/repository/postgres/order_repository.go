@@ -20,27 +20,27 @@ func NewOrder(db *sqlx.DB) *Order {
 	return &Order{db: db}
 }
 
-func (o *Order) Create(ctx context.Context, userID int, orderID string) (*model.Order, error) {
+func (o *Order) Create(ctx context.Context, userID int, orderNumber string) (*model.Order, error) {
 	uploadedAt := time.Now().UTC()
 
 	_, err := o.db.ExecContext(
 		ctx,
 		"INSERT INTO orders(user_id, number, uploaded_at) VALUES($1, $2, $3)",
-		userID, orderID, uploadedAt,
+		userID, orderNumber, uploadedAt,
 	)
 
 	if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == ErrCodeUniqueViolation {
-		utils.Log.Infow("Order already exists", "number", orderID)
+		utils.Log.Infow("Order already exists", "number", orderNumber)
 		return nil, utils.ErrLoginAlreadyExists
 	}
 	if err != nil {
-		utils.Log.Infow("Order creation failed", "number", orderID, "error", err)
+		utils.Log.Infow("Order creation failed", "number", orderNumber, "error", err)
 		return nil, err
 	}
 
-	utils.Log.Infow("Order uploaded", "number", orderID)
+	utils.Log.Infow("Order uploaded", "number", orderNumber)
 	return &model.Order{
-		Number:     orderID,
+		Number:     orderNumber,
 		UserID:     userID,
 		Status:     model.StatusNew,
 		UploadedAt: uploadedAt,
@@ -62,18 +62,18 @@ func (o *Order) GetByUserID(ctx context.Context, userID int) ([]model.Order, err
 	return orders, nil
 }
 
-func (o *Order) GetByID(ctx context.Context, orderID string) (*model.Order, error) {
+func (o *Order) GetByID(ctx context.Context, orderNumber string) (*model.Order, error) {
 	var order model.Order
-	err := o.db.GetContext(ctx, &order, "SELECT * FROM orders WHERE number = $1", orderID)
+	err := o.db.GetContext(ctx, &order, "SELECT * FROM orders WHERE number = $1", orderNumber)
 	if errors.Is(err, sql.ErrNoRows) {
-		utils.Log.Infow("Order not found", "id", orderID)
+		utils.Log.Infow("Order not found", "id", orderNumber)
 		return nil, utils.ErrIDDoesntExist
 	}
 	if err != nil {
-		utils.Log.Errorw("Order get by id query failed", "error", err, "id", orderID)
+		utils.Log.Errorw("Order get by id query failed", "error", err, "id", orderNumber)
 		return nil, err
 	}
-	utils.Log.Infow("Order found", "id", orderID)
+	utils.Log.Infow("Order found", "id", orderNumber)
 	return &order, nil
 }
 

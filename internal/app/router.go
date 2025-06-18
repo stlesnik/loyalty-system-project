@@ -22,7 +22,7 @@ func (a *App) initRouter(authH *handler.AuthHandler, ordH *handler.OrderHandler,
 	a.router.Post("/api/user/login", wrap(authH.Login))
 	a.router.Post("/api/user/orders", authWrap(ordH.UploadOrder))
 	a.router.Get("/api/user/orders", authWrap(ordH.GetOrders))
-	a.router.Get("/api/user/balance", wrap(balH.GetBalance))
-	a.router.Post("/api/user/balance/withdraw", wrap(balH.Withdraw))
-	a.router.Get("/api/user/withdrawals", wrap(balH.GetWithdrawals))
+	a.router.Get("/api/user/balance", authWrap(balH.GetBalance))
+	a.router.Post("/api/user/balance/withdraw", authWrap(balH.Withdraw))
+	a.router.Get("/api/user/withdrawals", authWrap(balH.GetWithdrawals))
 }

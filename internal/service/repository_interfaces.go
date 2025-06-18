@@ -12,18 +12,18 @@ type UserRepository interface {
 }
 
 type OrderRepository interface {
-	Create(ctx context.Context, userID int, orderID string) (*model.Order, error)
+	Create(ctx context.Context, userID int, orderNumber string) (*model.Order, error)
 	GetByUserID(ctx context.Context, userID int) ([]model.Order, error)
-	GetByID(ctx context.Context, orderID string) (*model.Order, error)
+	GetByID(ctx context.Context, orderNumber string) (*model.Order, error)
 	Update(ctx context.Context, order model.Order) error
 }
 
 type BalanceRepository interface {
-	Get(ctx context.Context, userID int) (*model.Balance, error)
+	GetTotal(ctx context.Context, userID int) (float64, error)
 	Update(ctx context.Context, userID int, deltaCurrent int, deltaWithdrawn int) error
 }
 
 type WithdrawalRepository interface {
-	Create(ctx context.Context, userID int, orderID string, sum int) (*model.Withdrawal, error)
-	GetByUserID(ctx context.Context, userID int) ([]model.Withdrawal, error)
+	Create(ctx context.Context, userID int, orderNumber string, sum float64) (*model.Withdrawal, error)
+	GetTotal(ctx context.Context, userID int) (float64, error)
 }

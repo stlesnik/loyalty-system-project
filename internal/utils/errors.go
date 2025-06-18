@@ -19,4 +19,7 @@ var (
 	ErrOrderAlreadyUploaded = errors.New("order already uploaded")
 	ErrOrderConflict        = errors.New("order uploaded by another user")
 	ErrNoOrders             = errors.New("no orders found")
+
+	//balance
+	ErrInsufficientFunds = errors.New("insufficient funds")
 )
