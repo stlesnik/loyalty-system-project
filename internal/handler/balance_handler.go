@@ -58,10 +58,30 @@ func (bH *BalanceHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
 	case errors.Is(err, utils.ErrOrderAlreadyUploaded):
 		http.Error(w, "Order conflict", http.StatusUnprocessableEntity)
 	case err != nil:
+		utils.Log.Errorf("create withdrawal error: %s", err.Error())
 		http.Error(w, "Server error", http.StatusInternalServerError)
 	default:
 		w.WriteHeader(http.StatusOK)
 	}
 }
 
-func (b *BalanceHandler) GetWithdrawals(w http.ResponseWriter, r *http.Request) {}
+func (bH *BalanceHandler) GetWithdrawals(w http.ResponseWriter, r *http.Request) {
+	userID, _ := r.Context().Value(middleware.UserIDKeyName).(int)
+	withdrawals, err := bH.s.GetAllWithdrawals(r.Context(), userID)
+	if err != nil {
+		utils.Log.Errorf("get withdrawals error: %s", err.Error())
+		http.Error(w, "Server error", http.StatusInternalServerError)
+		return
+	}
+	if len(withdrawals) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(withdrawals)
+	if err != nil {
+		utils.Log.Errorf("json encode error: %s", err.Error())
+		http.Error(w, "Server error", http.StatusInternalServerError)
+	}
+}

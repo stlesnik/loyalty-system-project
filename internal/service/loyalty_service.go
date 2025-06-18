@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/stlesnik/loyalty-system-project/internal/model"
 	"github.com/stlesnik/loyalty-system-project/internal/utils"
 )
 
@@ -50,4 +51,12 @@ func (s *BalanceService) CreateWithdrawal(ctx context.Context, userID int, order
 		return err
 	}
 	return nil
+}
+
+func (s *BalanceService) GetAllWithdrawals(ctx context.Context, userID int) ([]model.Withdrawal, error) {
+	withdrawals, err := s.repWith.GetByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	return withdrawals, nil
 }

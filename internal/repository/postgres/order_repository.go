@@ -21,9 +21,13 @@ func NewOrder(db *sqlx.DB) *Order {
 }
 
 func (o *Order) Create(ctx context.Context, userID int, orderNumber string) (*model.Order, error) {
-	uploadedAt := time.Now().UTC()
+	loc, err := time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		loc = time.FixedZone("MSK", 3*60*60)
+	}
+	uploadedAt := time.Now().In(loc)
 
-	_, err := o.db.ExecContext(
+	_, err = o.db.ExecContext(
 		ctx,
 		"INSERT INTO orders(user_id, number, uploaded_at) VALUES($1, $2, $3)",
 		userID, orderNumber, uploadedAt,

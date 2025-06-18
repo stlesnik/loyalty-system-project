@@ -26,4 +26,5 @@ type BalanceRepository interface {
 type WithdrawalRepository interface {
 	Create(ctx context.Context, userID int, orderNumber string, sum float64) (*model.Withdrawal, error)
 	GetTotal(ctx context.Context, userID int) (float64, error)
+	GetByUserID(ctx context.Context, userID int) ([]model.Withdrawal, error)
 }

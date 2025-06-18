@@ -57,10 +57,10 @@ type Balance struct {
 }
 
 type Withdrawal struct {
-	UserID      int
-	OrderID     string
-	Amount      float64
-	ProcessedAt time.Time
+	UserID      int       `json:"-" db:"user_id"`
+	OrderID     string    `json:"order" db:"order_number"`
+	Amount      float64   `json:"sum" db:"amount"`
+	ProcessedAt time.Time `json:"processed_at" db:"processed_at"`
 }
 
 type TotalWithdrawal struct {

@@ -10,5 +10,5 @@ CREATE TABLE orders (
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     status order_status NOT NULL DEFAULT 'NEW',
     accrual DECIMAL(10,2),
-    uploaded_at TIMESTAMP NOT NULL DEFAULT NOW()
+    uploaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
