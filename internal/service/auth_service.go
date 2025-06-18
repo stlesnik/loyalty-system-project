@@ -24,7 +24,7 @@ func (s AuthService) RegisterUser(ctx context.Context, login, password string) (
 		utils.Log.Infow("Failed to hash password", "error", err)
 		return -1, err
 	}
-	user, err := s.rep.CreateUser(ctx, login, string(hashedPass))
+	user, err := s.rep.Create(ctx, login, string(hashedPass))
 	if err != nil {
 		return -1, err
 	}
@@ -32,7 +32,7 @@ func (s AuthService) RegisterUser(ctx context.Context, login, password string) (
 }
 
 func (s AuthService) Authenticate(ctx context.Context, login string, password string) (int, error) {
-	user, err := s.rep.GetUserByLogin(ctx, login)
+	user, err := s.rep.GetByLogin(ctx, login)
 	switch {
 	case errors.Is(err, utils.ErrLoginDoesntExist):
 		return -1, utils.ErrInvalidCredentials
