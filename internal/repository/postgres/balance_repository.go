@@ -13,9 +13,9 @@ type Balance struct {
 func NewBalance(db *sqlx.DB) *Balance {
 	return &Balance{db: db}
 }
-func (b *Balance) GetBalance(ctx context.Context, userID int) (*model.Balance, error) {
+func (b *Balance) Get(ctx context.Context, userID int) (*model.Balance, error) {
 	return nil, nil
 }
-func (b *Balance) UpdateBalance(ctx context.Context, userID int, deltaCurrent int, deltaWithdrawn int) error {
+func (b *Balance) Update(ctx context.Context, userID int, deltaCurrent int, deltaWithdrawn int) error {
 	return nil
 }

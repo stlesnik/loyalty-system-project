@@ -22,7 +22,7 @@ func NewUser(db *sqlx.DB) *User {
 	return &User{db: db}
 }
 
-func (u *User) CreateUser(ctx context.Context, login, password string) (*model.User, error) {
+func (u *User) Create(ctx context.Context, login, password string) (*model.User, error) {
 	var id int
 	err := u.db.QueryRowContext(
 		ctx,
@@ -43,7 +43,7 @@ func (u *User) CreateUser(ctx context.Context, login, password string) (*model.U
 	return &model.User{ID: id, Login: login, PasswordHash: password}, nil
 }
 
-func (u *User) GetUserByLogin(ctx context.Context, login string) (*model.User, error) {
+func (u *User) GetByLogin(ctx context.Context, login string) (*model.User, error) {
 	var user model.User
 	err := u.db.GetContext(ctx, &user, "SELECT * FROM users WHERE login = $1", login)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -58,7 +58,7 @@ func (u *User) GetUserByLogin(ctx context.Context, login string) (*model.User, e
 	return &user, nil
 }
 
-func (u *User) GetUserByID(ctx context.Context, userID int) (*model.User, error) {
+func (u *User) GetByID(ctx context.Context, userID int) (*model.User, error) {
 	var user *model.User
 	err := u.db.GetContext(ctx, &user, "SELECT * FROM users WHERE id = $1", userID)
 	if errors.Is(err, sql.ErrNoRows) {

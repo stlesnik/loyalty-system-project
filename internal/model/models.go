@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 type User struct {
 	ID           int    `json:"id" db:"id"`
 	Login        string `json:"login" db:"login"`
@@ -15,10 +17,11 @@ const (
 )
 
 type Order struct {
-	ID          int    `json:"id"`
-	UserID      int    `json:"user_id"`
-	Status      Status `json:"status"`
-	BonusAmount int    `json:"bonus_amount"`
+	ID          int       `json:"id"`
+	UserID      int       `json:"user_id"`
+	Status      Status    `json:"status"`
+	BonusAmount int       `json:"bonus_amount"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 type Balance struct {
 	UserID  int    `json:"user_id"`

@@ -13,9 +13,9 @@ type Withdrawal struct {
 func NewWithdrawal(db *sqlx.DB) *Withdrawal {
 	return &Withdrawal{db: db}
 }
-func (w *Withdrawal) CreateWithdrawal(ctx context.Context, userID int, orderID string, sum int) (*model.Withdrawal, error) {
+func (w *Withdrawal) Create(ctx context.Context, userID int, orderID string, sum int) (*model.Withdrawal, error) {
 	return nil, nil
 }
-func (w *Withdrawal) GetWithdrawalsByUserID(ctx context.Context, userID int) ([]model.Withdrawal, error) {
+func (w *Withdrawal) GetByUserID(ctx context.Context, userID int) ([]model.Withdrawal, error) {
 	return nil, nil
 }
