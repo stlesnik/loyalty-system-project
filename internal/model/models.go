@@ -1,7 +1,6 @@
 package model
 
 import (
-	"database/sql"
 	"database/sql/driver"
 	"fmt"
 	"time"
@@ -12,69 +11,45 @@ type User struct {
 	Login        string `json:"login" db:"login"`
 	PasswordHash string `json:"password" db:"password"`
 }
-type Status int
+type Status string
 
 const (
-	NEW Status = iota
-	PROCESSING
-	INVALID
-	PROCESSED
+	StatusNew        Status = "NEW"
+	StatusProcessing Status = "PROCESSING"
+	StatusInvalid    Status = "INVALID"
+	StatusProcessed  Status = "PROCESSED"
 )
 
-var statusStrings = [...]string{
-	"NEW",
-	"PROCESSING",
-	"INVALID",
-	"PROCESSED",
-}
-
-func (s *Status) String() string {
-	if s == nil {
-		return "<nil>"
-	}
-	if int(*s) < 0 || int(*s) >= len(statusStrings) {
-		return "UNKNOWN"
-	}
-	return statusStrings[*s]
-}
-
-func (s *Status) Value() (driver.Value, error) {
-	if s == nil {
+func (s Status) Value() (driver.Value, error) {
+	if s == "" {
 		return nil, nil
 	}
-	return s.String(), nil
+	return string(s), nil
 }
 
-func (s *Status) Scan(value interface{}) error {
-	if value == nil {
-		*s = NEW
+func (s *Status) Scan(src interface{}) error {
+	if src == nil {
+		*s = StatusNew
 		return nil
 	}
-	strVal, ok := value.(string)
+	str, ok := src.(string)
 	if !ok {
-		return fmt.Errorf("status: cannot scan non-string %T", value)
+		return fmt.Errorf("cannot scan %T into Status", src)
 	}
-	switch strVal {
-	case "NEW":
-		*s = NEW
-	case "PROCESSING":
-		*s = PROCESSING
-	case "INVALID":
-		*s = INVALID
-	case "PROCESSED":
-		*s = PROCESSED
-	default:
-		return fmt.Errorf("status: unknown value %q", strVal)
+	switch Status(str) {
+	case StatusNew, StatusProcessing, StatusInvalid, StatusProcessed:
+		*s = Status(str)
+		return nil
 	}
-	return nil
+	return fmt.Errorf("unknown status %q", str)
 }
 
 type Order struct {
-	Number     string        `json:"number" db:"number"`
-	UserID     int           `json:"-" db:"user_id"`
-	Status     Status        `json:"status" db:"status"`
-	Accrual    sql.NullInt64 `json:"accrual,omitempty" db:"accrual"`
-	UploadedAt time.Time     `json:"uploaded_at" db:"uploaded_at"`
+	Number     string    `json:"number" db:"number"`
+	UserID     int       `json:"-" db:"user_id"`
+	Status     Status    `json:"status" db:"status"`
+	Accrual    *int      `json:"accrual,omitempty" db:"accrual"`
+	UploadedAt time.Time `json:"uploaded_at" db:"uploaded_at"`
 }
 type Balance struct {
 	UserID  int    `json:"user_id"`

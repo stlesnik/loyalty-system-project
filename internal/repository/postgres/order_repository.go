@@ -42,7 +42,7 @@ func (o *Order) Create(ctx context.Context, userID int, orderID string) (*model.
 	return &model.Order{
 		Number:     orderID,
 		UserID:     userID,
-		Status:     model.NEW,
+		Status:     model.StatusNew,
 		UploadedAt: uploadedAt,
 	}, nil
 }
@@ -53,7 +53,7 @@ func (o *Order) GetByUserID(ctx context.Context, userID int) ([]model.Order, err
         SELECT *
         FROM orders 
         WHERE user_id = $1
-        ORDER BY created_at DESC  
+        ORDER BY "uploaded_at" DESC  
     `, userID)
 
 	if err != nil {
