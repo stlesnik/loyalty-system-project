@@ -61,6 +61,7 @@ func (bH *BalanceHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
 		utils.Log.Errorf("create withdrawal error: %s", err.Error())
 		http.Error(w, "Server error", http.StatusInternalServerError)
 	default:
+		utils.Log.Infow("Created withdrawal", "user_id", userID, "amount", req.Amount)
 		w.WriteHeader(http.StatusOK)
 	}
 }

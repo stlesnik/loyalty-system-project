@@ -5,7 +5,6 @@ import (
 	"github.com/stlesnik/loyalty-system-project/internal/client"
 	"github.com/stlesnik/loyalty-system-project/internal/model"
 	"github.com/stlesnik/loyalty-system-project/internal/utils"
-	"go.uber.org/zap"
 	"time"
 )
 
@@ -65,10 +64,9 @@ func (s *OrderService) processOrder(ctx context.Context, orderNumber string) {
 		status = "INVALID"
 	}
 	if err := s.rep.Update(ctx, orderNumber, status, resp.Accrual); err != nil {
-		utils.Log.Error("Order status update failed",
-			zap.String("order", orderNumber),
-			zap.Error(err))
+		utils.Log.Errorw("Order status update failed", "order", orderNumber, "err", err)
 	}
+	utils.Log.Infow("Order fetched", "order", orderNumber, "status", status, "amount", resp.Accrual)
 
 	if resp.Status == "PROCESSING" || resp.Status == "REGISTERED" {
 		time.AfterFunc(30*time.Second, func() {

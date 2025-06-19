@@ -44,6 +44,7 @@ func (oH *OrderHandler) UploadOrder(w http.ResponseWriter, r *http.Request) {
 	case err != nil:
 		http.Error(w, "Server error", http.StatusInternalServerError)
 	default:
+		utils.Log.Infow("Order uploaded", "order", orderNumber, "user_id", userID)
 		w.WriteHeader(http.StatusAccepted)
 	}
 }
