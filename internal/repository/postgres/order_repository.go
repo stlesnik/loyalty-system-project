@@ -42,7 +42,6 @@ func (o *Order) Create(ctx context.Context, userID int, orderNumber string) (*mo
 		return nil, err
 	}
 
-	utils.Log.Infow("Order uploaded", "number", orderNumber)
 	return &model.Order{
 		Number:     orderNumber,
 		UserID:     userID,

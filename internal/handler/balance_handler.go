@@ -27,6 +27,7 @@ func (bH *BalanceHandler) GetBalance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	utils.Log.Infow("Got balance", "user_id", userID, "balance", balance)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(balance)
