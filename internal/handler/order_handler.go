@@ -13,11 +13,11 @@ import (
 )
 
 type OrderHandler struct {
-	s   *service.OrderService
+	s   service.OrderService
 	cfg *config.Config
 }
 
-func NewOrderHandler(s *service.OrderService, cfg *config.Config) *OrderHandler {
+func NewOrderHandler(s service.OrderService, cfg *config.Config) *OrderHandler {
 	return &OrderHandler{s: s, cfg: cfg}
 }
 

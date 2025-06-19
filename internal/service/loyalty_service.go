@@ -7,7 +7,7 @@ import (
 	"github.com/stlesnik/loyalty-system-project/internal/utils"
 )
 
-type BalanceService struct {
+type BalanceSvc struct {
 	repBal  BalanceRepository
 	repWith WithdrawalRepository
 }
@@ -17,11 +17,11 @@ type Balance struct {
 	Withdrawn float64 `json:"withdrawn"`
 }
 
-func NewBalanceService(repBal BalanceRepository, repWith WithdrawalRepository) *BalanceService {
-	return &BalanceService{repBal: repBal, repWith: repWith}
+func NewBalanceService(repBal BalanceRepository, repWith WithdrawalRepository) *BalanceSvc {
+	return &BalanceSvc{repBal: repBal, repWith: repWith}
 }
 
-func (s *BalanceService) GetBalance(ctx context.Context, userID int) (*Balance, error) {
+func (s *BalanceSvc) GetBalance(ctx context.Context, userID int) (*Balance, error) {
 	totalAmount, err := s.repBal.GetTotal(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get current failed: %w", err)
@@ -38,7 +38,7 @@ func (s *BalanceService) GetBalance(ctx context.Context, userID int) (*Balance, 
 	}, nil
 }
 
-func (s *BalanceService) CreateWithdrawal(ctx context.Context, userID int, orderNumber string, amount float64) error {
+func (s *BalanceSvc) CreateWithdrawal(ctx context.Context, userID int, orderNumber string, amount float64) error {
 	current, err := s.repBal.GetTotal(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("get current failed: %w", err)
@@ -53,7 +53,7 @@ func (s *BalanceService) CreateWithdrawal(ctx context.Context, userID int, order
 	return nil
 }
 
-func (s *BalanceService) GetAllWithdrawals(ctx context.Context, userID int) ([]model.Withdrawal, error) {
+func (s *BalanceSvc) GetAllWithdrawals(ctx context.Context, userID int) ([]model.Withdrawal, error) {
 	withdrawals, err := s.repWith.GetByUserID(ctx, userID)
 	if err != nil {
 		return nil, err

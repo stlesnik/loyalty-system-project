@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/stlesnik/loyalty-system-project/internal/model"
+	"time"
 )
 
 type UserRepository interface {
@@ -27,4 +28,20 @@ type WithdrawalRepository interface {
 	Create(ctx context.Context, userID int, orderNumber string, sum float64) (*model.Withdrawal, error)
 	GetTotal(ctx context.Context, userID int) (float64, error)
 	GetByUserID(ctx context.Context, userID int) ([]model.Withdrawal, error)
+}
+
+type OrderService interface {
+	StartWorkers(ctx context.Context, workerCount int)
+	UploadOrder(ctx context.Context, userID int, orderNumber string) error
+	GetUserOrders(ctx context.Context, userID int) ([]model.Order, error)
+}
+type BalanceService interface {
+	GetBalance(ctx context.Context, userID int) (*Balance, error)
+	CreateWithdrawal(ctx context.Context, userID int, orderNumber string, amount float64) error
+	GetAllWithdrawals(ctx context.Context, userID int) ([]model.Withdrawal, error)
+}
+type AuthService interface {
+	RegisterUser(ctx context.Context, login, password string) (int, error)
+	Authenticate(ctx context.Context, login string, password string) (int, error)
+	GenerateUserToken(id int, secretKey string, tokenExp time.Duration) (string, error)
 }

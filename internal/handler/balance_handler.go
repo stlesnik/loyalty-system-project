@@ -11,11 +11,11 @@ import (
 )
 
 type BalanceHandler struct {
-	s   *service.BalanceService
+	s   service.BalanceService
 	cfg *config.Config
 }
 
-func NewBalanceHandler(s *service.BalanceService, cfg *config.Config) *BalanceHandler {
+func NewBalanceHandler(s service.BalanceService, cfg *config.Config) *BalanceHandler {
 	return &BalanceHandler{s: s, cfg: cfg}
 }
 

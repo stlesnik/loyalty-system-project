@@ -10,28 +10,28 @@ import (
 
 const FetchAccrualTimeout = 30 * time.Second
 
-type OrderService struct {
+type OrderSvc struct {
 	rep        OrderRepository
 	accrualCli *client.AccrualClient
 	workerPool chan string
 }
 
-func NewOrderService(rep OrderRepository, accrualClient *client.AccrualClient) *OrderService {
-	return &OrderService{
+func NewOrderService(rep OrderRepository, accrualClient *client.AccrualClient) *OrderSvc {
+	return &OrderSvc{
 		rep:        rep,
 		accrualCli: accrualClient,
 		workerPool: make(chan string, 1000),
 	}
 }
 
-func (s *OrderService) StartWorkers(ctx context.Context, workerCount int) {
+func (s *OrderSvc) StartWorkers(ctx context.Context, workerCount int) {
 	for i := 0; i < workerCount; i++ {
 		go s.accrualWorker(ctx, i)
 	}
 	utils.Log.Infow("Accrual workers started", "count", workerCount)
 }
 
-func (s *OrderService) accrualWorker(ctx context.Context, id int) {
+func (s *OrderSvc) accrualWorker(ctx context.Context, id int) {
 	utils.Log.Debugw("Worker started", "id", id)
 
 	for {
@@ -45,7 +45,7 @@ func (s *OrderService) accrualWorker(ctx context.Context, id int) {
 	}
 }
 
-func (s *OrderService) processOrder(ctx context.Context, orderNumber string) {
+func (s *OrderSvc) processOrder(ctx context.Context, orderNumber string) {
 	ctx, cancel := context.WithTimeout(ctx, FetchAccrualTimeout)
 	defer cancel()
 
@@ -75,7 +75,7 @@ func (s *OrderService) processOrder(ctx context.Context, orderNumber string) {
 	}
 }
 
-func (s *OrderService) UploadOrder(ctx context.Context, userID int, orderNumber string) error {
+func (s *OrderSvc) UploadOrder(ctx context.Context, userID int, orderNumber string) error {
 	existing, err := s.rep.GetByID(ctx, orderNumber)
 
 	if err == nil {
@@ -92,7 +92,7 @@ func (s *OrderService) UploadOrder(ctx context.Context, userID int, orderNumber 
 	return err
 }
 
-func (s *OrderService) GetUserOrders(ctx context.Context, userID int) ([]model.Order, error) {
+func (s *OrderSvc) GetUserOrders(ctx context.Context, userID int) ([]model.Order, error) {
 	orders, err := s.rep.GetByUserID(ctx, userID)
 	switch {
 	case len(orders) == 0:

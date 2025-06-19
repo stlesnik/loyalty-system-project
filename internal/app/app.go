@@ -21,7 +21,7 @@ type App struct {
 	Cfg      *config.Config
 	server   *http.Server
 	reps     postgres.Repositories
-	orderSvc *service.OrderService
+	orderSvc service.OrderService
 }
 
 func New() (*App, error) {
