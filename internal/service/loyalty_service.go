@@ -22,7 +22,7 @@ func NewBalanceService(repBal BalanceRepository, repWith WithdrawalRepository) *
 }
 
 func (s *BalanceService) GetBalance(ctx context.Context, userID int) (*Balance, error) {
-	current, err := s.repBal.GetTotal(ctx, userID)
+	totalAmount, err := s.repBal.GetTotal(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get current failed: %w", err)
 	}
@@ -33,7 +33,7 @@ func (s *BalanceService) GetBalance(ctx context.Context, userID int) (*Balance, 
 	}
 
 	return &Balance{
-		Current:   current,
+		Current:   totalAmount - withdrawn,
 		Withdrawn: withdrawn,
 	}, nil
 }
