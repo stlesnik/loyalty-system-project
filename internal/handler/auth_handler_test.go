@@ -113,6 +113,8 @@ func TestAuthHandler_Register(t *testing.T) {
 				require.True(t, authCookie.HttpOnly)
 				require.Equal(t, "/", authCookie.Path)
 			}
+			err = rr.Result().Body.Close()
+			require.NoError(t, err)
 		})
 	}
 }
@@ -190,6 +192,8 @@ func TestAuthHandler_Login(t *testing.T) {
 				require.Equal(t, "auth_token", cookies[0].Name)
 				require.Equal(t, "valid_token", cookies[0].Value)
 			}
+			err = rr.Result().Body.Close()
+			require.NoError(t, err)
 		})
 	}
 }
