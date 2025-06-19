@@ -96,7 +96,8 @@ func TestAuthHandler_Register(t *testing.T) {
 			require.Equal(t, tt.expectedStatus, rr.Code)
 
 			if tt.expectCookie {
-				cookies := rr.Result().Cookies()
+				res := rr.Result()
+				cookies := res.Cookies()
 				require.NotEmpty(t, cookies)
 
 				var authCookie *http.Cookie
@@ -112,9 +113,9 @@ func TestAuthHandler_Register(t *testing.T) {
 				require.True(t, authCookie.Expires.After(time.Now()))
 				require.True(t, authCookie.HttpOnly)
 				require.Equal(t, "/", authCookie.Path)
+				err := res.Body.Close()
+				require.NoError(t, err)
 			}
-			err = rr.Result().Body.Close()
-			require.NoError(t, err)
 		})
 	}
 }
@@ -187,13 +188,14 @@ func TestAuthHandler_Login(t *testing.T) {
 			require.Equal(t, tt.expectedStatus, rr.Code)
 
 			if tt.expectCookie {
-				cookies := rr.Result().Cookies()
+				res := rr.Result()
+				cookies := res.Cookies()
 				require.NotEmpty(t, cookies)
 				require.Equal(t, "auth_token", cookies[0].Name)
 				require.Equal(t, "valid_token", cookies[0].Value)
+				err := res.Body.Close()
+				require.NoError(t, err)
 			}
-			err = rr.Result().Body.Close()
-			require.NoError(t, err)
 		})
 	}
 }
