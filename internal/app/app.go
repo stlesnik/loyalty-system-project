@@ -1,0 +1,95 @@
+package app
+
+import (
+	"context"
+	"fmt"
+	"github.com/go-chi/chi/v5"
+	"github.com/stlesnik/loyalty-system-project/internal/client"
+	"github.com/stlesnik/loyalty-system-project/internal/config"
+	"github.com/stlesnik/loyalty-system-project/internal/handler"
+	"github.com/stlesnik/loyalty-system-project/internal/repository/postgres"
+	"github.com/stlesnik/loyalty-system-project/internal/service"
+	"github.com/stlesnik/loyalty-system-project/internal/utils"
+	"log"
+	"net/http"
+)
+
+const workerCount = 5
+
+type App struct {
+	router   chi.Router
+	Cfg      *config.Config
+	server   *http.Server
+	reps     postgres.Repositories
+	orderSvc service.OrderService
+}
+
+func New() (*App, error) {
+	// config
+	cfg, err := config.New()
+	if err != nil {
+		log.Printf("Не получилось обработать конфиг: %s", err)
+		return nil, err
+	}
+
+	//logger
+	err = utils.InitLogger(cfg.Environment)
+	if err != nil {
+		return nil, fmt.Errorf("logger broke: %w", err)
+	}
+
+	//repository
+	reps, err := postgres.InitRepositories(cfg.DatabaseDSN)
+	if err != nil {
+		return nil, fmt.Errorf("db could not start: %w", err)
+	}
+
+	//accrual client
+	accrualClient := client.NewAccrualClient(cfg.AccrualSystemAddress)
+
+	//services
+	authSvc := service.NewAuthService(reps.User)
+	orderSvc := service.NewOrderService(reps.Order, accrualClient)
+	balanceSvc := service.NewBalanceService(reps.Balance, reps.Withdraw)
+
+	// handlers
+	authHandler := handler.NewAuthHandler(authSvc, cfg)
+	orderHandler := handler.NewOrderHandler(orderSvc, cfg)
+	balanceHandler := handler.NewBalanceHandler(balanceSvc, cfg)
+
+	a := &App{
+		router:   chi.NewRouter(),
+		Cfg:      cfg,
+		server:   &http.Server{},
+		reps:     reps,
+		orderSvc: orderSvc,
+	}
+	a.initRouter(authHandler, orderHandler, balanceHandler)
+	return a, nil
+}
+
+func (a *App) Start(ctx context.Context) error {
+	a.orderSvc.StartWorkers(ctx, workerCount)
+
+	a.server.Handler = a.router
+	a.server.Addr = a.Cfg.ServerAddress
+
+	go func() {
+		<-ctx.Done()
+		_ = a.server.Shutdown(context.Background())
+	}()
+
+	return a.server.ListenAndServe()
+}
+
+func (a *App) Stop(ctx context.Context) error {
+	if err := a.server.Shutdown(ctx); err != nil {
+		return err
+	}
+
+	if err := a.reps.User.GetDB().Close(); err != nil {
+		return err
+	}
+
+	return nil
+}
